@@ -65,12 +65,32 @@ BufMgr::~BufMgr() {
 
 const Status BufMgr::allocBuf(int & frame) 
 {
+	Status status = OK;
+	int i = 0;
+	while (i < numBufs) {
+		BufDesc currFrame = bufTable[clockHand];
+		bool pinned = currFrame.pinCnt > 0;
+		if (!currFrame.valid && currFrame.refBit && !pinned) {
+				
+			currFrame.refBit = false;
+			*frame = currFrame.frameNo;			
+			return status;
+		}
 
+		if (currFrame.dirty) {
+			//TODO
+			status = currFrame.file->writePage(currFrame.pageNo, bufPool[currFrame.frameNo]);
+			currFrame.dirty = false;
+			bufTable.remove(currFrame.File, currFrame.pageNo);
+			*frame = currFrame.frameNo;			
+			return status;
+		}
+	advanceClock();
+	}
 
-
-
-
-
+	//only pinned frames
+	status = BUFFEREXCEEDED;
+	return status;
 }
 
 	
