@@ -83,7 +83,37 @@ const Status BufMgr::allocBuf(int & frame)
  */ 
 const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 {
-	Status status = OK;	
+	Status status = OK;
+	int frameNo = 0;
+	status = hashTable->lookup(file, PageNo, frameNo);
+	// Case 1: Page is not in the buffer pool.	
+	if (status == HASHNOTFOUND){
+		status = allocBuf(frameNo); 
+		// Error occured in allocBuf
+		if (status != OK){
+		       return status;
+		}else{
+		       // read page on file into buffer
+		       status = file->readPage(PageNo, &bufPool[frameNo]);
+		       if (status != OK) {
+			       return status;
+		       }
+		       status = hashTable->insert(file, PageNo, frameNo);	
+		       // Error occured in inserting to hashtable
+		       if (status != OK){
+			       return status;
+		       }
+		       bufTable[frameNo].Set(file, PageNo);
+		       page = &bufPool[frameNo];
+		       return OK;
+		}		
+	}
+	// Case 2: Page is in the buffer pool
+	else if (status == OK){
+		bufTable[frameNo].refbit = true;
+		bufTable[frameNo].pinCnt += 1;
+		page = &bufPool[frameNo];
+	}	
 	return status;
 }
 
