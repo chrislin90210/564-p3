@@ -73,20 +73,24 @@ const Status BufMgr::allocBuf(int & frame)
 
 }
 
-	
+/*
+ * Attempts to read a page into page
+ * If the page is already in buffer, assign the frame in buffer to page
+ * Otherwise, read the page into buffer and then assign allocated frame to page
+ *
+ * Input are the file and the page number that we want to read in
+ * The frame containing the page will be set to page upon successful read
+ */ 
 const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 {
-
-
-
-
-
+	Status status = OK;	
+	return status;
 }
 
 /* 
-  Decrements the pinCnt of the frame containing (file, PageNo) and, if dirty == true, sets the dirty bit.  
-  Returns OK if no errors occurred, HASHNOTFOUND if the page is not in the
-  buffer pool hash table, PAGENOTPINNED if the pin count is already 0.
+ * Decrements the pinCnt of the frame containing (file, PageNo) and, if dirty == true, sets the dirty bit.  
+ * Returns OK if no errors occurred, HASHNOTFOUND if the page is not in the
+ * buffer pool hash table, PAGENOTPINNED if the pin count is already 0.
 */
 
 const Status BufMgr::unPinPage(File* file, const int PageNo, const bool dirty) 
@@ -94,21 +98,18 @@ const Status BufMgr::unPinPage(File* file, const int PageNo, const bool dirty)
 	Status status = OK;
 	int frameNo = 0;
 	status = hashTable->lookup(file, PageNo, frameNo);
-	if (status = OK){
-		int pinCount = bufTable[i].pinCnt;
+	if (status == OK){
+		int pinCount = bufTable[frameNo].pinCnt;
 		if (pinCount == 0){
 			return PAGENOTPINNED;
 		}
 		else{
-			bufTable[i].pinCnt -= 1;
-			dirty ? bufTable[i].dirty = true;
+			bufTable[frameNo].pinCnt -= 1;
+			if(dirty) bufTable[frameNo].dirty = true;
 		}
 	}
-	else{
-		// Return HASHNOTFOUND
-		return status;
-	}
-	return 0;
+	// Return the appropriate status depending on hash lookup 
+	return status;
 }
 
 const Status BufMgr::allocPage(File* file, int& pageNo, Page*& page) 
