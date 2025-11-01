@@ -70,22 +70,23 @@ const Status BufMgr::allocBuf(int & frame)
 	while (i < numBufs) {
 		BufDesc currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
-		if (!currFrame.valid && currFrame.refBit && !pinned) {
+		if (!currFrame.valid && currFrame.refbit && !pinned) {
 				
-			currFrame.refBit = false;
-			*frame = currFrame.frameNo;			
+			frame = currFrame.frameNo;			
 			return status;
 		}
 
-		if (currFrame.dirty) {
+		if (currFrame.dirty && !pinned) {
 			//TODO
-			status = currFrame.file->writePage(currFrame.pageNo, bufPool[currFrame.frameNo]);
+			status = currFrame.file->writePage(currFrame.pageNo, &bufPool[currFrame.frameNo]);
 			currFrame.dirty = false;
-			bufTable.remove(currFrame.File, currFrame.pageNo);
-			*frame = currFrame.frameNo;			
+			hashTable->remove(currFrame.file, currFrame.pageNo);
+			frame = currFrame.frameNo;			
 			return status;
 		}
-	advanceClock();
+		currFrame.refbit = false;
+		advanceClock();
+		i++;
 	}
 
 	//only pinned frames
@@ -96,7 +97,7 @@ const Status BufMgr::allocBuf(int & frame)
 	
 const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 {
-
+	
 
 
 
