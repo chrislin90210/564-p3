@@ -70,7 +70,7 @@ const Status BufMgr::allocBuf(int & frame)
 	while (i < numBufs) {
 		BufDesc currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
-		if (!currFrame.valid && currFrame.refbit && !pinned) {
+		if (!currFrame.valid && !currFrame.refbit && !pinned) {
 				
 			frame = currFrame.frameNo;			
 			return status;
