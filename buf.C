@@ -70,23 +70,30 @@ const Status BufMgr::allocBuf(int & frame)
 	while (i < numBufs) {
 		BufDesc currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
-		if (!currFrame.valid && !currFrame.refbit && !pinned) {
-				
+		if (!currFrame.valid) {
 			frame = currFrame.frameNo;			
 			return status;
 		}
 
-		if (currFrame.dirty && !pinned) {
-			//TODO
+		if (currFrame.refbit || currFrame.pinned) {
+			currFrame.refbit = false;	
+			advanceClock();
+			i++;
+			continue;
+		}
+
+		//must be valid, not pinned, refbit not set
+		if (currFrame.dirty) {
+			//write to disk
 			status = currFrame.file->writePage(currFrame.pageNo, &bufPool[currFrame.frameNo]);
 			currFrame.dirty = false;
 			hashTable->remove(currFrame.file, currFrame.pageNo);
-			frame = currFrame.frameNo;			
-			return status;
-		}
-		currFrame.refbit = false;
-		advanceClock();
-		i++;
+		} 
+		frame = currFrame.frameNo;			
+		return status;
+
+		//advanceClock();
+		//i++;
 	}
 
 	//only pinned frames
