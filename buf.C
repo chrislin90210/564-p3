@@ -99,6 +99,7 @@ const Status BufMgr::allocBuf(int & frame)
 			status = currFrame.file->writePage(currFrame.pageNo, &bufPool[currFrame.frameNo]);
 			currFrame.dirty = false;
 			hashTable->remove(currFrame.file, currFrame.pageNo);
+			
 		} 
 		frame = currFrame.frameNo;			
 		return status;
