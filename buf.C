@@ -66,8 +66,20 @@ BufMgr::~BufMgr() {
 const Status BufMgr::allocBuf(int & frame) 
 {
 	Status status = OK;
-	int i = 0;
-	while (i < numBufs) {
+	bool allPinned = true;
+	for (int j = 0; j < numBufs; j++) {
+		BufDesc currFrame = bufTable[clockHand];
+		bool pinned = currFrame.pinCnt > 0;
+		allPinned &= pinned;	
+		advanceClock();
+	}
+
+	if (allPinned)  {
+		status = BUFFEREXCEEDED;
+		return status;
+	}
+
+	while (true) {
 		BufDesc currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
 		if (!currFrame.valid) {
@@ -75,10 +87,9 @@ const Status BufMgr::allocBuf(int & frame)
 			return status;
 		}
 
-		if (currFrame.refbit || currFrame.pinned) {
+		if (currFrame.refbit || pinned) {
 			currFrame.refbit = false;	
 			advanceClock();
-			i++;
 			continue;
 		}
 
@@ -92,13 +103,9 @@ const Status BufMgr::allocBuf(int & frame)
 		frame = currFrame.frameNo;			
 		return status;
 
-		//advanceClock();
-		//i++;
 	}
-
-	//only pinned frames
-	status = BUFFEREXCEEDED;
 	return status;
+	//only pinned frames
 }
 
 /*
