@@ -66,22 +66,23 @@ BufMgr::~BufMgr() {
 const Status BufMgr::allocBuf(int & frame) 
 {
 	Status status = OK;
+	bool first = true;
+	int start = clockHand;
 	bool allPinned = true;
-	for (int j = 0; j < numBufs; j++) {
-		BufDesc currFrame = bufTable[clockHand];
-		bool pinned = currFrame.pinCnt > 0;
-		allPinned &= pinned;	
-		advanceClock();
-	}
-
-	if (allPinned)  {
-		status = BUFFEREXCEEDED;
-		return status;
-	}
-
 	while (true) {
+
+		if (clockHand == start) {
+			if (allPinned && !first) {
+				status = BUFFEREXCEEDED;
+				return status;
+			}				
+			allPinned = true;
+		}
+
 		BufDesc currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
+		allPinned &= pinned;
+		first = false;
 		if (!currFrame.valid) {
 			frame = currFrame.frameNo;			
 			return status;
