@@ -179,14 +179,36 @@ const Status BufMgr::unPinPage(File* file, const int PageNo, const bool dirty)
 	return status;
 }
 
+/*
+ * This method will return the page number and pointer to a newly allocated page.
+ * Returns OK if no errors occurred, UNIXERR if a Unix error occurred, 
+ * BUFFEREXCEEDED if all buffer frames are pinned and HASHTBLERROR if a hash table 
+ * error occurred. 
+*/
 const Status BufMgr::allocPage(File* file, int& pageNo, Page*& page) 
 {
 
+	Status status = OK;
+	status = file->allocatePage(pageNo);
+	if (status != OK) {
+		return status;
+	}
 
+	int frameNo = 0;
+	status = allocBuf(frameNo);
+	if (status != OK) {
+		return status;
+	}
 
+	status = hashTable->insert(file, pageNo, frameNo);
+	if (status != OK) {
+		return status;
+	}
 
+	bufTable[frameNo].Set(file, pageNo);
+	page = &bufPool[frameNo];
 
-
+	return OK;
 
 }
 
