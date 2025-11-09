@@ -79,7 +79,7 @@ const Status BufMgr::allocBuf(int & frame)
 			allPinned = true;
 		}
 
-		BufDesc currFrame = bufTable[clockHand];
+		BufDesc& currFrame = bufTable[clockHand];
 		bool pinned = currFrame.pinCnt > 0;
 		allPinned &= pinned;
 		first = false;
