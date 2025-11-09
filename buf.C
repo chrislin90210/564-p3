@@ -67,7 +67,7 @@ const Status BufMgr::allocBuf(int & frame)
 {
 	Status status = OK;
 	bool first = true;
-	int start = clockHand;
+	unsigned int start = clockHand;
 	bool allPinned = true;
 	while (true) {
 
@@ -99,10 +99,10 @@ const Status BufMgr::allocBuf(int & frame)
 			//write to disk
 			status = currFrame.file->writePage(currFrame.pageNo, &bufPool[currFrame.frameNo]);
 			currFrame.dirty = false;
-			hashTable->remove(currFrame.file, currFrame.pageNo);
 			
 		} 
 		frame = currFrame.frameNo;			
+		hashTable->remove(currFrame.file, currFrame.pageNo);
 		return status;
 
 	}
@@ -128,7 +128,7 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 		status = allocBuf(frameNo); 
 		// Error occured in allocBuf
 		if (status != OK){
-		       return status;
+			return status;
 		}else{
 		       // read page on file into buffer
 		       status = file->readPage(PageNo, &bufPool[frameNo]);
@@ -147,6 +147,7 @@ const Status BufMgr::readPage(File* file, const int PageNo, Page*& page)
 	}
 	// Case 2: Page is in the buffer pool
 	else if (status == OK){
+		printf("THIS IS WORRYSOME\n");
 		bufTable[frameNo].refbit = true;
 		bufTable[frameNo].pinCnt += 1;
 		page = &bufPool[frameNo];
