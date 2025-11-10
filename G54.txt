@@ -1,2 +1,3 @@
 Benjamin Kang: Worked on read_pages and unpincount. Assisted with debugging.
 Christopher Lin: Implemented allocBuf and debugged.
+Sanjay Menon: Implemented allocPage.
